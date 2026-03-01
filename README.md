@@ -1,36 +1,94 @@
-# Movie Recommendation App
+# 🎬 AI Movie Recommendation Web App
 
-A simple movie recommendation app with separate `backend` and `frontend` folders.
+This project is a full-stack AI-powered Movie Recommendation Web Application .  
+The application recommends 3–5 movies based on user preferences using the GROK API.
 
-**Prerequisites**
-- Node.js (v16+ recommended) and `npm` or `pnpm`
+---
 
-**Quick Start (Windows PowerShell)**
+## 🚀 Deployed Link
 
-Backend
+🔗 Live Application: https://task-board-application-two.vercel.app/
 
-```powershell
-cd backend
-npm install
-# initialize the SQLite DB (if needed)
-node db/initDb.js
-# start the backend server
-node server.js
+--- 
+
+## 🚀 Project Overview
+
+This application allows users to:
+
+- Enter a movie genre or short description (e.g., “action movies with a strong female lead”)
+- Receive 3–5 AI-generated movie recommendations
+- View recommendations instantly in a clean UI
+- Store user input and recommendations in a database
+- Maintain history with timestamp tracking
+
+This project demonstrates AI integration, REST API development, and full-stack architecture.
+
+---
+
+## 🧱 Tech Stack
+
+### 🔹 Frontend
+- ReactJS (Vite)
+- Axios
+- React Hooks
+- CSS
+
+### 🔹 Backend
+- Node.js
+- Fastify
+- GROK API Integration
+
+### 🔹 Database
+- SQLite
+
+### 🔹 Tools
+- Git & GitHub
+- Postman (API Testing)
+
+---
+
+## 📦 Installation & Setup
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone https://github.com/yourusername/movie-recommendation-app.git
+cd movie-recommendation-app
 ```
 
-Frontend
+---
 
-```powershell
+## 2️⃣ Backend Setup
+```bash
+cd backend
+npm install
+```
+
+Create a .env file inside the backend folder:
+
+GROK_API_KEY=your_grok_api_key
+PORT=5000
+
+Start backend:
+```bash
+npm run dev
+```
+
+Backend runs at:
+
+http://localhost:5000
+
+---
+
+### 3️⃣ Frontend Setup
+
+Open a new terminal:
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open the frontend URL shown by Vite (usually http://localhost:5173) in your browser.
+Frontend runs at:
 
-**Notes**
-- The backend has dependencies listed in `backend/package.json`; there is no `start` script, so `node server.js` is used to run the server.
-- The frontend uses Vite; use `npm run build` to build for production and `npm run preview` to preview the production build.
-- If the backend relies on environment variables, add a `.env` file in `backend/` before starting.
-
-If you want, I can add an `npm start` script to the backend `package.json` and a simple dev script for running both services concurrently.
+http://localhost:5173
