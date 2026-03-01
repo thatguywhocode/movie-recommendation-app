@@ -7,7 +7,7 @@ The application recommends 3–5 movies based on user preferences using the GROK
 
 ## 🚀 Deployed Link
 
-🔗 Live Application: https://task-board-application-two.vercel.app/
+🔗 Live Application: (https://movie-recommendation-frontend-omega.vercel.app/)
 
 --- 
 
