@@ -21,7 +21,6 @@ fastify.register(cors, {
 /* -------------------- DATABASE -------------------- */
 const dbDir = path.join(__dirname, "db");
 
-// Ensure db folder exists (VERY IMPORTANT)
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir);
 }
@@ -29,13 +28,12 @@ if (!fs.existsSync(dbDir)) {
 const dbPath = path.join(dbDir, "movies.db");
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error("Failed to connect to SQLite:", err.message);
+    console.error("❌ SQLite Error:", err.message);
   } else {
-    console.log("Connected to SQLite database");
+    console.log("✅ Connected to SQLite database");
   }
 });
 
-// Create table safely
 db.run(`
   CREATE TABLE IF NOT EXISTS recommendations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +43,12 @@ db.run(`
   )
 `);
 
-/* -------------------- GROQ AI -------------------- */
+/* -------------------- GROQ -------------------- */
+if (!process.env.GROQ_API_KEY) {
+  console.error("❌ GROQ_API_KEY is missing in .env");
+  process.exit(1);
+}
+
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
@@ -53,7 +56,7 @@ const groq = new Groq({
 /* -------------------- ROUTES -------------------- */
 
 fastify.get("/", (req, reply) => {
-  reply.send({ message: "Backend is running" });
+  reply.send({ message: "Backend is running 🚀" });
 });
 
 fastify.post("/test", (req, reply) => {
@@ -63,12 +66,14 @@ fastify.post("/test", (req, reply) => {
   });
 });
 
+/* -------- History -------- */
 fastify.get("/history", (req, reply) => {
   db.all(
     "SELECT * FROM recommendations ORDER BY timestamp DESC",
     [],
     (err, rows) => {
       if (err) {
+        console.error("DB ERROR:", err);
         return reply.code(500).send({ error: "Database error" });
       }
 
@@ -84,8 +89,9 @@ fastify.get("/history", (req, reply) => {
   );
 });
 
+/* -------- Recommend -------- */
 fastify.post("/recommend", async (req, reply) => {
-  const userInput = req.body.user_input;
+  const userInput = req.body?.user_input;
 
   if (!userInput) {
     return reply.code(400).send({ error: "user_input is required" });
@@ -93,7 +99,7 @@ fastify.post("/recommend", async (req, reply) => {
 
   try {
     const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.1-8b-instant", // ✅ stable model
       messages: [
         {
           role: "user",
@@ -103,7 +109,15 @@ Return only movie names separated by commas.`
       ]
     });
 
-    const aiText = completion.choices[0].message.content;
+    console.log("🔍 GROQ RAW RESPONSE:", completion);
+
+    // ✅ SAFE RESPONSE EXTRACTION
+    const aiText =
+      completion?.choices?.[0]?.message?.content;
+
+    if (!aiText) {
+      throw new Error("No valid response from AI");
+    }
 
     let recommendations = aiText
       .split(",")
@@ -111,17 +125,26 @@ Return only movie names separated by commas.`
       .filter(Boolean);
 
     if (recommendations.length === 0) {
-      recommendations = ["Inception", "Mad Max: Fury Road", "Wonder Woman"];
+      recommendations = [
+        "Inception",
+        "Mad Max: Fury Road",
+        "Wonder Woman"
+      ];
     }
 
+    // ✅ Save to DB safely
     const insertId = await new Promise((resolve, reject) => {
       db.run(
         `INSERT INTO recommendations (user_input, recommended_movies)
          VALUES (?, ?)`,
         [userInput, JSON.stringify(recommendations)],
         function (err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
+          if (err) {
+            console.error("DB INSERT ERROR:", err);
+            reject(err);
+          } else {
+            resolve(this.lastID);
+          }
         }
       );
     });
@@ -133,10 +156,13 @@ Return only movie names separated by commas.`
     });
 
   } catch (error) {
-    console.error("GROQ ERROR:", error.message);
+    console.error("❌ FULL ERROR:", error);
+    console.error("❌ GROQ ERROR:", error.message);
+    console.error("❌ GROQ RESPONSE:", error.response?.data);
+
     return reply.code(500).send({
       error: "AI service failed",
-      reason: error.message
+      reason: error.message || "Unknown error"
     });
   }
 });
@@ -146,8 +172,8 @@ const PORT = process.env.PORT || 3000;
 
 fastify.listen({ port: PORT, host: "0.0.0.0" }, err => {
   if (err) {
-    console.error(err);
+    console.error("❌ SERVER ERROR:", err);
     process.exit(1);
   }
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
